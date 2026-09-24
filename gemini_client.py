@@ -20,6 +20,11 @@ update MODEL_NAME below if needed.
 
 import json
 import re
+import os
+import io
+import time
+import logging
+from PIL import Image
 
 import streamlit as st
 
@@ -30,12 +35,48 @@ try:
 except ImportError:
     _HAS_SDK = False
 
-MODEL_NAME = "gemini-3.6-flash"
+# List of models to try in sequence if one experiences temporary high demand (503) or rate limits (429)
+CANDIDATE_MODELS = [
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
+]
+MODEL_NAME = CANDIDATE_MODELS[0]
 
 
-import os
-import io
-from PIL import Image
+def _generate_with_fallback(client, contents, max_retries_per_model: int = 1):
+    """
+    Attempt content generation across candidate models with automatic retries.
+    Catches 503 (high demand) and 429 errors and cascades to the next available model.
+    """
+    last_error = None
+    for model_name in CANDIDATE_MODELS:
+        for attempt in range(max_retries_per_model + 1):
+            try:
+                return client.models.generate_content(
+                    model=model_name,
+                    contents=contents,
+                )
+            except Exception as e:
+                last_error = e
+                err_str = str(e).lower()
+                is_transient = (
+                    "503" in err_str
+                    or "unavailable" in err_str
+                    or "high demand" in err_str
+                    or "429" in err_str
+                    or "resource_exhausted" in err_str
+                    or "overloaded" in err_str
+                )
+                if is_transient and attempt < max_retries_per_model:
+                    time.sleep(1.0)
+                    continue
+                # If error occurred, break out of attempt loop to try next candidate model
+                break
+    raise last_error if last_error else RuntimeError("No models could be reached.")
+
 
 def get_api_key() -> str:
     """Retrieve Gemini API key from session state, st.secrets, environment, or secrets.toml file."""
@@ -140,8 +181,8 @@ def diagnose_crop_photo(img_bytes: bytes, crop: str, note: str = "") -> dict:
         pil_img.convert("RGB").save(buf, format="JPEG")
         clean_jpeg_bytes = buf.getvalue()
 
-        response = client.models.generate_content(
-            model=MODEL_NAME,
+        response = _generate_with_fallback(
+            client=client,
             contents=[
                 prompt,
                 types.Part.from_bytes(data=clean_jpeg_bytes, mime_type="image/jpeg"),
@@ -149,13 +190,19 @@ def diagnose_crop_photo(img_bytes: bytes, crop: str, note: str = "") -> dict:
         )
         return _extract_json(response.text)
     except Exception as e:  # noqa: BLE001 - surface any API/parsing error to the UI
+        err_str = str(e)
+        if "503" in err_str or "high demand" in err_str.lower() or "unavailable" in err_str.lower():
+            friendly_err = "AI service is currently under peak demand. Please tap 'Get advisory' again in a few moments."
+        else:
+            friendly_err = f"{e}"
         return {
             "crop_visible": "unsure",
-            "condition": f"[Error calling Gemini: {e}]",
+            "condition": f"[Error calling Gemini: {friendly_err}]",
             "severity": "unknown",
             "confidence": "low",
             "recommended_action": "Retry, or check your API key and quota.",
         }
+
 
 
 EXTRACTION_PROMPT = """Extract a structured incident report from this farmer's message
@@ -186,17 +233,23 @@ def extract_report_from_text(text: str) -> dict:
             "uncertain_fields": ["all — demo mode or empty input"],
         }
     try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
+        response = _generate_with_fallback(
+            client=client,
             contents=EXTRACTION_PROMPT.format(text=text),
         )
         return _extract_json(response.text)
     except Exception as e:  # noqa: BLE001
+        err_str = str(e)
+        if "503" in err_str or "high demand" in err_str.lower() or "unavailable" in err_str.lower():
+            friendly_err = "AI service is currently under peak demand. Please retry in a few moments."
+        else:
+            friendly_err = f"{e}"
         return {
             "crop": None,
             "issue_type": "unknown",
-            "description": f"[Error calling Gemini: {e}]",
+            "description": f"[Error calling Gemini: {friendly_err}]",
             "area_value": None,
             "area_unit": None,
             "uncertain_fields": ["all"],
         }
+

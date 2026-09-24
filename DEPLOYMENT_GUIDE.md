@@ -1,5 +1,7 @@
 # 🚀 Deployment Guide — Fasal Saakshi
 
+> 🌐 **Currently Live At:** [https://fasal-saakshi-crop-health.streamlit.app/](https://fasal-saakshi-crop-health.streamlit.app/)
+
 This guide explains **how** and **where** to deploy your **Fasal Saakshi** application for free, step-by-step.
 
 ---

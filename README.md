@@ -3,8 +3,15 @@
 AI-powered, localised crop advisory for small farmers — with a bonus loss-evidence
 packet for insurance claims.
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://fasal-saakshi-crop-health.streamlit.app/)
+> 🌐 **Live Demo URL:** [https://fasal-saakshi-crop-health.streamlit.app/](https://fasal-saakshi-crop-health.streamlit.app/)
+
 Built for **Build with AI: Code for Communities, Second Edition**
 **Track 4 — AgriN & Regenerative Agricultural Intelligence**
+
+## 🌐 Live Prototype
+The application is deployed and live on Streamlit Community Cloud:  
+👉 **[https://fasal-saakshi-crop-health.streamlit.app/](https://fasal-saakshi-crop-health.streamlit.app/)**
 
 ## What it does
 
@@ -38,7 +45,7 @@ Built for **Build with AI: Code for Communities, Second Edition**
 ## Run it locally
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Aniketsingh-45/fasal-saakshi.git
 cd fasal-saakshi
 python -m venv venv && source venv/bin/activate   # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
@@ -54,16 +61,11 @@ The app also runs **without** a key, in a clearly-labelled demo mode (diagnosis
 text will say `[DEMO MODE]`) — useful for testing the UI, but get a real key
 before recording your demo video.
 
-## Deploy it (free, ~10 minutes)
+## Deployment Details
 
-**Streamlit Community Cloud** (recommended, easiest):
-1. Push this repo to GitHub (public).
-2. Go to [share.streamlit.io](https://share.streamlit.io), sign in with GitHub.
-3. "New app" → pick this repo → main file `app.py`.
-4. In **App settings → Secrets**, paste the same content as your
-   `secrets.toml` (with your real key).
-5. Deploy. You'll get a public `*.streamlit.app` URL — this is your
-   "working prototype link".
+The live prototype is hosted on **Streamlit Community Cloud**:
+- **Live URL:** [https://fasal-saakshi-crop-health.streamlit.app/](https://fasal-saakshi-crop-health.streamlit.app/)
+- **Deployment Guide:** See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for full instructions on Streamlit Cloud, Render, Hugging Face Spaces, and Docker.
 
 ## Tech stack
 

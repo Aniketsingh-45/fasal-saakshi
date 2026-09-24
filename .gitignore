@@ -1,0 +1,29 @@
+# Streamlit secrets & local env
+.streamlit/secrets.toml
+.env
+.env.local
+.env.*.local
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Logs & temp files
+*.log
+scratch/
+
+# IDE configurations
+.vscode/
+.idea/
